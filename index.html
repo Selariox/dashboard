@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'self'">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Suivi des projets de recherche</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="login" hidden>
+  <form id="loginForm" class="panel login">
+    <h1>Projets de recherche</h1>
+    <p class="sub">Accès privé. Connectez-vous pour afficher vos données.</p>
+    <label>Adresse e-mail<input type="email" id="lEmail" autocomplete="username" required></label>
+    <label>Mot de passe<input type="password" id="lPw" autocomplete="current-password" required></label>
+    <p id="lErr" class="err" role="alert"></p>
+    <button class="btn pri" type="submit">Se connecter</button>
+  </form>
+</div>
+<div id="app" hidden>
+<aside>
+  <h1>Projets de recherche<small>Dépôts, acceptations, refus</small></h1>
+  <nav role="tablist">
+    <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
+    <button role="tab" data-tab="reports" aria-selected="false">Reports</button>
+    <button role="tab" data-tab="data" aria-selected="false">Data</button>
+  </nav>
+  <div class="side-foot">
+    <button class="btn pri" id="btnImport">Importer un CSV</button>
+    <button class="btn" id="btnAdd">Ajouter un projet</button>
+    <button class="btn" id="btnLogout">Se déconnecter</button>
+  </div>
+  <input type="file" id="file" accept=".csv,text/csv,.txt" hidden>
+</aside>
+
+<main id="main">
+<section id="overview">
+  <div class="top"><div><h2>Overview</h2><p class="sub" id="ovSub"></p></div></div>
+  <div id="ovBody"></div>
+</section>
+
+<section id="reports" hidden>
+  <div class="top"><div><h2>Reports</h2><p class="sub">Analyse par axe, avec taux de succès (acceptés / projets évalués) et montants en euros.</p></div>
+    <div><button class="btn" id="btnRepCsv">Exporter le rapport</button> <button class="btn" id="btnPrint">Imprimer</button></div></div>
+  <div class="bar">
+    <label>Regrouper par <select id="repBy"></select></label>
+    <label>Année <select id="repYear"></select></label>
+  </div>
+  <div class="panel wrap" id="repBody"></div>
+</section>
+
+<section id="data" hidden>
+  <div class="top"><div><h2>Data</h2><p class="sub" id="dataSub"></p></div></div>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Rechercher (projet, labo, contact, call…)" aria-label="Rechercher">
+    <select id="fStat" aria-label="Filtrer par statut"><option value="">Tous les statuts</option><option value="depose">Déposé</option><option value="accepte">Accepté</option><option value="refuse">Refusé</option><option value="autre">Autre</option></select>
+    <span class="sp"></span>
+    <button class="btn" id="btnTpl">Modèle CSV</button>
+    <button class="btn" id="btnExp">Exporter en CSV</button>
+    <button class="btn" id="btnClear">Tout effacer</button>
+  </div>
+  <div class="panel wrap" id="dataBody"></div>
+  <p class="hint">Colonnes attendues : id_projet, date, programme, dispositif, Call, Rôle, laboratoire, contact, mail, statut du projet. Colonne facultative : montant (en €). Séparateur « ; », « , » ou tabulation, détecté automatiquement. Un id_projet déjà présent est mis à jour.</p>
+</section>
+</main>
+</div>
+
+<dialog id="dlg">
+  <h3 id="dlgT">Ajouter un projet</h3>
+  <div class="fg" id="fg"></div>
+  <div class="acts"><button class="btn pri" id="dlgSave">Enregistrer</button><button class="btn" id="dlgCancel">Annuler</button><span class="sp"></span><button class="btn" id="dlgDel" style="color:var(--ko)">Supprimer</button></div>
+</dialog>
+<datalist id="dl-statut"><option value="Déposé"><option value="Accepté"><option value="Refusé"></datalist>
+<datalist id="dl-role"><option value="Coordinateur"><option value="Partenaire"></datalist>
+<div id="toast" role="status"></div>
+
+<script src="js/config.js"></script>
+<script src="js/vendor/supabase-2.117.3.js"></script>
+<script src="js/csv.js"></script>
+<script src="js/db.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
