@@ -78,3 +78,63 @@ section[hidden]{display:none}
 .login label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
 .login input{padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
 .err{color:var(--ko);margin:0;min-height:1.3em}
+
+/* ===== Thème v2 : typographie, profondeur, animations ===== */
+@font-face{font-family:'Bricolage Grotesque';src:url(../fonts/bricolage-grotesque-latin-wght-normal.woff2) format('woff2');font-weight:200 800;font-display:swap}
+@property --p{syntax:'<number>';inherits:false;initial-value:0}
+:root{--sh:0 1px 2px rgba(22,33,58,.06),0 12px 28px -16px rgba(22,33,58,.28);--ease:cubic-bezier(.2,.7,.2,1);--disp:'Bricolage Grotesque',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--sh:0 1px 2px rgba(0,0,0,.4),0 12px 28px -16px rgba(0,0,0,.7)}}
+h2,h3,.kpi b,aside h1,.login h1{font-family:var(--disp)}
+h2{font-size:28px;font-weight:700;letter-spacing:-.02em}
+h3{font-weight:650}
+th,td{padding:11px 12px}
+.panel,.kpi{box-shadow:var(--sh);border-radius:16px}
+.kpi{border-radius:14px;transition:transform .25s var(--ease)}
+.kpi:hover{transform:translateY(-3px)}
+.kpi b{font-size:32px;font-weight:700}
+aside{background:linear-gradient(190deg,color-mix(in srgb,var(--side) 80%,#4C6FFF),var(--side) 60%)}
+
+/* Repère de marque : un anneau aux couleurs des statuts */
+aside h1::before,.login h1::before{content:"";display:block;width:30px;height:30px;margin-bottom:14px;border-radius:50%;background:conic-gradient(var(--ok) 0 38%,var(--wait) 0 68%,var(--ko) 0 100%);-webkit-mask:radial-gradient(farthest-side,transparent 56%,#000 58%);mask:radial-gradient(farthest-side,transparent 56%,#000 58%);animation:spin 1.2s var(--ease) both}
+
+/* Navigation : pastille qui glisse */
+nav{position:relative;display:flex;flex-direction:column;gap:4px}
+nav button{position:relative;z-index:1;transition:color .25s,background .2s}
+nav .pill{position:absolute;left:0;top:0;width:0;height:0;background:#fff;border-radius:10px;z-index:0;transition:transform .4s var(--ease),width .4s var(--ease),height .4s var(--ease)}
+nav button:hover{background:rgba(255,255,255,.07)}
+nav button[aria-selected=true]{background:transparent;color:#16213A}
+@media (max-width:860px){nav{flex-direction:row}}
+
+.btn{border-radius:10px;transition:transform .15s,border-color .2s,box-shadow .2s}
+.btn:hover{box-shadow:0 6px 16px -8px rgba(22,33,58,.45)}
+.btn:active{transform:scale(.97)}
+tbody tr{transition:background .15s}
+.strip{height:38px;border-radius:10px}
+.strip i{transition:filter .2s}.strip i:hover{filter:brightness(1.15)}
+.tag.accepte,.tag.depose,.tag.refuse,.tag.autre{display:inline-flex;align-items:center;gap:6px;background:color-mix(in srgb,var(--c) 16%,var(--panel));color:color-mix(in srgb,var(--c) 70%,var(--ink))}
+.tag::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+
+/* Taux de succès : anneau */
+.kpi.rate{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ring{--p:var(--v);flex:none;width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--ok) calc(var(--p)*1%),var(--line) 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px));mask:radial-gradient(farthest-side,transparent calc(100% - 8px),#000 calc(100% - 7px))}
+
+/* Animations d'entrée : jouées au chargement et à chaque changement d'onglet */
+@keyframes rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes wipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes growy{from{transform:scaleY(0)}}
+@keyframes ringin{from{--p:0}}
+@keyframes spin{from{opacity:0;transform:rotate(-200deg) scale(.6)}}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(6px)}}
+@keyframes toastin{from{opacity:0;transform:translateY(12px)}}
+.anim :is(.kpi,.panel,tbody tr){animation:rise .55s var(--ease) both;animation-delay:calc(var(--i,0)*55ms)}
+.anim :is(.strip,.mini){animation:wipe .9s .25s var(--ease) both}
+.anim .ybar{transform-origin:bottom;animation:growy .8s var(--ease) both;animation-delay:calc(.25s + var(--j,0)*70ms)}
+.anim .ring{animation:ringin 1.1s .3s var(--ease) both}
+
+dialog[open]{animation:pop .25s var(--ease)}
+dialog::backdrop{backdrop-filter:blur(4px)}
+#toast{animation:toastin .35s var(--ease);box-shadow:var(--sh);border-radius:12px}
+.login{animation:rise .7s var(--ease) both;padding:28px;border-radius:18px}
+#login{background-image:radial-gradient(color-mix(in srgb,var(--ink) 14%,transparent) 1px,transparent 1.5px);background-size:22px 22px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media print{*{animation:none!important}}

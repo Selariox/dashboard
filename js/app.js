@@ -2,7 +2,20 @@
 let rows=[],sort={k:'date',d:-1},editing=null;
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',5000)}
 const fail=(e,m='Opération impossible')=>toast(m+' : '+(e&&e.message?e.message:e));
-async function start(){try{rows=await dbLoad()}catch(e){rows=[];fail(e,'Chargement impossible')}render()}
+/* ---------- Effets visuels ---------- */
+const fmtK=(v,f)=>f==='eur'?eur.format(v):f==='pct'?v+' %':v;
+function countUps(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+ $$('[data-count]').forEach(el=>{const to=+el.dataset.count,f=el.dataset.fmt;if(!to)return;const t0=performance.now();
+  (function step(t){const p=Math.min((t-t0)/800,1);el.textContent=fmtK(Math.round(to*(1-Math.pow(1-p,3))),f);if(p<1)requestAnimationFrame(step)})(t0)})}
+function movePill(){const b=$('nav [aria-selected=true]'),p=$('nav .pill');if(!b||!p||!b.offsetWidth)return;
+ p.style.width=b.offsetWidth+'px';p.style.height=b.offsetHeight+'px';p.style.transform=`translate(${b.offsetLeft}px,${b.offsetTop}px)`}
+function playFx(){const m=$('#main'),sec=$('main>section:not([hidden])');if(!sec)return;movePill();
+ sec.querySelectorAll('.kpi,.panel,tbody tr').forEach((el,i)=>el.style.setProperty('--i',Math.min(i,14)));
+ sec.querySelectorAll('.ybar').forEach((el,i)=>el.style.setProperty('--j',i));
+ m.classList.remove('anim');void m.offsetWidth;m.classList.add('anim');
+ clearTimeout(playFx.t);playFx.t=setTimeout(()=>m.classList.remove('anim'),1800);countUps()}
+addEventListener('resize',movePill);
+async function start(){try{rows=await dbLoad()}catch(e){rows=[];fail(e,'Chargement impossible')}render();playFx()}
 async function importText(t){
  if(t.length>5e6){toast('Fichier trop volumineux (5 Mo maximum).');return}
  const T=parseCSV(t);if(T.length<2){toast('Fichier vide ou sans ligne de données.');return}
@@ -33,12 +46,13 @@ const empty=()=>`<div class="empty"><p><b>Aucun projet pour l’instant.</b><br>
 function renderOverview(){
  const s=stats(rows);$('#ovSub').textContent=rows.length?`${s.n} projet${s.n>1?'s':''} suivi${s.n>1?'s':''}, ${new Set(rows.map(r=>r.labo).filter(Boolean)).size} laboratoire(s).`:'Vue d’ensemble du portefeuille.';
  if(!rows.length){$('#ovBody').innerHTML=`<div class="panel">${empty()}</div>`;return}
- const k=(v,l,c='')=>`<div class="kpi ${c}"><b>${v}</b><span>${l}</span></div>`;
+ const k=(v,l,c='',f='n')=>`<div class="kpi ${c}"><b data-count="${v}" data-fmt="${f}">${fmtK(v,f)}</b><span>${l}</span></div>`,rate=s.taux==null?0:Math.round(s.taux*100),
+  kRate=`<div class="kpi rate"><div><b ${s.taux==null?'':`data-count="${rate}" data-fmt="pct"`}>${s.taux==null?'—':rate+' %'}</b><span>Taux de succès</span></div><div class="ring" style="--v:${rate}"></div></div>`;
  const yrs=[...groupBy(rows,year)].sort((a,b)=>a[0].localeCompare(b[0])),mx=Math.max(...yrs.map(y=>y[1].length));
  const years=yrs.map(([y,l])=>{const t=stats(l);return`<div class="ycol"><span class="n">${l.length}</span><div class="ybar" style="height:${l.length/mx*140}px">${ORDER.map(c=>t[c]?`<i class="${c}" style="height:${t[c]/l.length*100}%" title="${LAB[c]} : ${t[c]}"></i>`:'').join('')}</div><small>${y}</small></div>`}).join('');
  const progs=[...groupBy(rows,r=>r.programme)].sort((a,b)=>b[1].length-a[1].length).slice(0,6).map(([p,l])=>{const t=stats(l);return`<tr><td>${esc(p)}</td><td class="num">${l.length}</td><td>${strip(t,'mini')}</td><td class="num">${pct(t.taux)}</td></tr>`}).join('');
  const recent=[...rows].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,6).map(r=>`<tr><td><b>${esc(r.id)}</b><br><span class="sub">${esc(r.programme)} · ${esc(r.call)}</span></td><td>${fmtDate(r.date)}</td><td>${tag(r.statut)}</td></tr>`).join('');
- $('#ovBody').innerHTML=`<div class="kpis">${k(s.n,'Projets déposés au total')}${k(s.depose,'En attente de décision','wait')}${k(s.accepte,'Acceptés','ok')}${k(s.refuse,'Refusés','ko')}${k(pct(s.taux),'Taux de succès')}${k(eur.format(s.obt),'Montant obtenu')}</div>
+ $('#ovBody').innerHTML=`<div class="kpis">${k(s.n,'Projets déposés au total')}${k(s.depose,'En attente de décision','wait')}${k(s.accepte,'Acceptés','ok')}${k(s.refuse,'Refusés','ko')}${kRate}${k(s.obt,'Montant obtenu','','eur')}</div>
  <div class="panel"><h3>Répartition des projets par statut</h3>${strip(s)}<div class="legend">${ORDER.filter(c=>s[c]).map(c=>`<em style="--c:var(--${{accepte:'ok',depose:'wait',refuse:'ko',autre:'oth'}[c]})">${LAB[c]} · ${s[c]} (${Math.round(s[c]/s.n*100)} %)</em>`).join('')}<em style="--c:transparent">Montant demandé : ${eur.format(s.dem)}</em></div></div>
  <div class="grid2"><div class="panel"><h3>Dépôts par année</h3><div class="years">${years}</div></div>
  <div class="panel wrap"><h3>Derniers dépôts</h3><table><tbody>${recent}</tbody></table></div></div>
@@ -94,7 +108,7 @@ async function saveForm(){
 
 /* ---------- Navigation & événements ---------- */
 function render(){renderOverview();renderReports();renderData()}
-function tab(t){$$('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));$$('main>section').forEach(s=>s.hidden=s.id!==t)}
+function tab(t){$$('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));$$('main>section').forEach(s=>s.hidden=s.id!==t);movePill();playFx()}
 $$('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.tab));
 $('#repBy').innerHTML=Object.entries(AXES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');
 $('#repBy').onchange=$('#repYear').onchange=renderReports;

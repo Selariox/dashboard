@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://*.supabase.co wss://*.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://*.supabase.co wss://*.supabase.co; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Suivi des projets de recherche</title>
@@ -24,6 +24,7 @@
 <aside>
   <h1>Projets de recherche<small>Dépôts, acceptations, refus</small></h1>
   <nav role="tablist">
+    <i class="pill" aria-hidden="true"></i>
     <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
     <button role="tab" data-tab="reports" aria-selected="false">Reports</button>
     <button role="tab" data-tab="data" aria-selected="false">Data</button>
