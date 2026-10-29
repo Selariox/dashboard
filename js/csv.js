@@ -1,14 +1,24 @@
-/* Utilitaires et import/export CSV */
+/* Constantes, utilitaires et import/export CSV */
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const eur=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'');
-const COLS=[['id','id_projet'],['date','date'],['programme','programme'],['dispositif','dispositif'],['call','Call'],['role','Rôle'],['labo','laboratoire'],['contact','contact'],['mail','mail'],['statut','statut du projet'],['montant','montant (€)']];
-const REQUIRED=COLS.slice(0,10);
-const ALIAS={idprojet:'id',id:'id',date:'date',programme:'programme',dispositif:'dispositif',call:'call',role:'role',laboratoire:'labo',labo:'labo',contact:'contact',mail:'mail',email:'mail',statutduprojet:'statut',statut:'statut',montant:'montant',budget:'montant'};
-const LAB={depose:'Déposé',accepte:'Accepté',refuse:'Refusé',autre:'Autre'},ORDER=['accepte','depose','refuse','autre'];
-const cat=s=>{const n=norm(s);if(/refus|rejet|nonretenu|echec/.test(n))return'refuse';if(/accept|financ|retenu|laureat/.test(n))return'accepte';if(/depos|soumis|evaluation|encours|instruction/.test(n))return'depose';return'autre'};
-const year=r=>r.date?r.date.slice(0,4):'N/D';
+const STATUTS=['Brouillon','En préparation','Déposé','Présélectionné','Liste complémentaire','Accepté','Refusé','Retiré'];
+/* Catégories de champs : modifiez ici pour ajouter ou renommer un champ (puis la base, voir sql/) */
+const GROUPS=[
+ ['Identification',[['id','Identifiant du projet'],['acronyme','Acronyme'],['eotp','N° EOTP (si accepté)'],['titre','Titre']]],
+ ['Programme',[['programme','Programme'],['dispositif','Dispositif'],['call','Call'],['role','Rôle']]],
+ ['Équipe',[['labo','Laboratoire'],['contact','Contact'],['mail','Mail']]],
+ ['Dépôt et financement',[['date_limite','Date limite de dépôt'],['date','Date de dépôt'],['statut','Statut'],['montant','Budget (€)']]],
+ ['Suivi',[['prochaine_action','Prochaine action'],['echeance','Échéance de l’action'],['date_decision','Date de décision'],['notes','Notes']]]];
+const COLS=GROUPS.flatMap(g=>g[1]),FIELDS=COLS.map(c=>c[0]);
+const DATES=['date_limite','date','echeance','date_decision'];
+const CSVH={id:'id_projet',date:'date_depot',call:'Call',role:'Rôle',labo:'laboratoire',statut:'statut du projet',montant:'budget',echeance:'echeance_action'};
+const REQUIRED=['id','date','programme','dispositif','call','role','labo','contact','mail','statut'];
+const ALIAS={idprojet:'id',id:'id',acronyme:'acronyme',eotp:'eotp',neotp:'eotp',noeotp:'eotp',titre:'titre',programme:'programme',dispositif:'dispositif',call:'call',role:'role',laboratoire:'labo',labo:'labo',contact:'contact',mail:'mail',email:'mail',datelimite:'date_limite',datelimitededepot:'date_limite',date:'date',datedepot:'date',datededepot:'date',statutduprojet:'statut',statut:'statut',montant:'montant',budget:'montant',prochaineaction:'prochaine_action',echeance:'echeance',echeanceaction:'echeance',datedecision:'date_decision',notes:'notes',commentaires:'notes'};
+const LAB={prep:'En préparation',depose:'En évaluation',accepte:'Accepté',refuse:'Refusé',retire:'Retiré',autre:'Autre'},ORDER=['accepte','depose','prep','refuse','retire','autre'];
+const cat=s=>{const n=norm(s);if(/refus|rejet|nonretenu|echec/.test(n))return'refuse';if(/accept|financ|retenu|laureat/.test(n))return'accepte';if(/retire|abandon/.test(n))return'retire';if(/brouillon|preparation/.test(n))return'prep';if(/depos|soumis|preselect|complementaire|evaluation|instruction/.test(n))return'depose';return'autre'};
+const year=r=>(r.date||r.date_limite||'N/D').slice(0,4);
 const fmtDate=d=>d?d.split('-').reverse().join('/'):'—';
 
 /* ---------- CSV ---------- */

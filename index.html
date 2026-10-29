@@ -6,13 +6,13 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src https://*.supabase.co wss://*.supabase.co; font-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Suivi des projets de recherche</title>
+<title>Dashboard</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div id="login" hidden>
   <form id="loginForm" class="panel login">
-    <h1>Projets de recherche</h1>
+    <h1>Dashboard</h1>
     <p class="sub">Accès privé. Connectez-vous pour afficher vos données.</p>
     <label>Adresse e-mail<input type="email" id="lEmail" autocomplete="username" required></label>
     <label>Mot de passe<input type="password" id="lPw" autocomplete="current-password" required></label>
@@ -22,7 +22,7 @@
 </div>
 <div id="app" hidden>
 <aside>
-  <h1>Projets de recherche<small>Dépôts, acceptations, refus</small></h1>
+  <h1>Dashboard</h1>
   <nav role="tablist">
     <i class="pill" aria-hidden="true"></i>
     <button role="tab" data-tab="overview" aria-selected="true">Overview</button>
@@ -31,7 +31,6 @@
   </nav>
   <div class="side-foot">
     <button class="btn pri" id="btnImport">Importer un CSV</button>
-    <button class="btn" id="btnAdd">Ajouter un projet</button>
     <button class="btn" id="btnLogout">Se déconnecter</button>
   </div>
   <input type="file" id="file" accept=".csv,text/csv,.txt" hidden>
@@ -54,27 +53,29 @@
 </section>
 
 <section id="data" hidden>
-  <div class="top"><div><h2>Data</h2><p class="sub" id="dataSub"></p></div></div>
+  <div class="top"><div><h2>Data</h2></div></div>
   <div class="bar">
+    <button class="btn pri plus" id="btnNew" title="Nouveau projet" aria-label="Nouveau projet">+</button>
     <input type="search" id="q" placeholder="Rechercher (projet, labo, contact, call…)" aria-label="Rechercher">
-    <select id="fStat" aria-label="Filtrer par statut"><option value="">Tous les statuts</option><option value="depose">Déposé</option><option value="accepte">Accepté</option><option value="refuse">Refusé</option><option value="autre">Autre</option></select>
+    <select id="fStat" aria-label="Filtrer par statut"></select>
+    <select id="fYear" aria-label="Filtrer par année"></select>
     <span class="sp"></span>
+    <button class="btn" id="btnImport2">Importer un CSV</button>
     <button class="btn" id="btnTpl">Modèle CSV</button>
     <button class="btn" id="btnExp">Exporter en CSV</button>
     <button class="btn" id="btnClear">Tout effacer</button>
   </div>
   <div class="panel wrap" id="dataBody"></div>
-  <p class="hint">Colonnes attendues : id_projet, date, programme, dispositif, Call, Rôle, laboratoire, contact, mail, statut du projet. Colonne facultative : montant (en €). Séparateur « ; », « , » ou tabulation, détecté automatiquement. Un id_projet déjà présent est mis à jour.</p>
+  <p class="hint">Colonnes minimales du CSV : id_projet, date_depot, programme, dispositif, Call, Rôle, laboratoire, contact, mail, statut du projet. Colonnes facultatives : acronyme, eotp, titre, date_limite, budget (€), prochaine_action, echeance_action, date_decision, notes. Les colonnes absentes du fichier ne modifient pas les projets déjà enregistrés. Le « Modèle CSV » donne la liste complète.</p>
 </section>
 </main>
 </div>
 
 <dialog id="dlg">
   <h3 id="dlgT">Ajouter un projet</h3>
-  <div class="fg" id="fg"></div>
+  <div id="fg"></div>
   <div class="acts"><button class="btn pri" id="dlgSave">Enregistrer</button><button class="btn" id="dlgCancel">Annuler</button><span class="sp"></span><button class="btn" id="dlgDel" style="color:var(--ko)">Supprimer</button></div>
 </dialog>
-<datalist id="dl-statut"><option value="Déposé"><option value="Accepté"><option value="Refusé"></datalist>
 <datalist id="dl-role"><option value="Coordinateur"><option value="Partenaire"></datalist>
 <div id="toast" role="status"></div>
 
