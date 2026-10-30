@@ -1,5 +1,5 @@
 /* Connexion / déconnexion. Aucune inscription possible depuis la page : le compte est créé dans Supabase. */
-const IDLE_MS = 0;
+const IDLE_MS = 30 * 60 * 1000;
 let idleT;
 const armIdle = () => { clearTimeout(idleT); idleT = setTimeout(logout, IDLE_MS); };
 ['click', 'keydown', 'mousemove', 'touchstart'].forEach(ev => document.addEventListener(ev, () => { if (!$('#app').hidden) armIdle(); }, {passive: true}));
