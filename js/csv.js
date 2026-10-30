@@ -6,7 +6,7 @@ const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLo
 const STATUTS=['Brouillon','En préparation','Déposé','Présélectionné','Liste complémentaire','Accepté','Refusé','Retiré'];
 /* Catégories de champs : modifiez ici pour ajouter ou renommer un champ (puis la base, voir sql/) */
 const GROUPS=[
- ['Identification',[['id','Identifiant du projet'],['acronyme','Acronyme'],['eotp','N° EOTP (si accepté)'],['titre','Titre']]],
+ ['Identification',[['id','N° du projet'],['acronyme','Acronyme'],['eotp','N° EOTP (si accepté)'],['titre','Titre']]],
  ['Programme',[['programme','Programme'],['dispositif','Dispositif'],['call','Call'],['role','Rôle']]],
  ['Équipe',[['labo','Laboratoire'],['contact','Contact'],['mail','Mail']]],
  ['Dépôt et financement',[['date_limite','Date limite de dépôt'],['date','Date de dépôt'],['statut','Statut'],['montant','Budget (€)']]],

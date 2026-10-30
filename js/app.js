@@ -123,8 +123,9 @@ function renderData(){
 }
 
 /* ---------- Formulaire par catégories ---------- */
+const nextId=()=>rows.reduce((m,r)=>/^\d+$/.test(r.id)?Math.max(m,+r.id):m,0)+1;
 function openForm(id){
- editing=id;const r=rows.find(x=>x.id===id)||{statut:'Brouillon'};
+ editing=id;const r=rows.find(x=>x.id===id)||{statut:'Brouillon',id:String(nextId())};
  $('#dlgT').textContent=id?`${id}${r.acronyme?' · '+r.acronyme:''}`:'Nouveau projet';$('#dlgDel').style.display=id?'':'none';
  const fld=([k,h])=>{const v=r[k]??'',full=['titre','mail','notes','labo','prochaine_action'].includes(k)?'full':'';let inp;
   if(k==='statut'){const o=!v||STATUTS.includes(v)?STATUTS:[...STATUTS,v];inp=`<select name="statut"><option value=""></option>${o.map(s=>`<option ${s===v?'selected':''}>${esc(s)}</option>`).join('')}</select>`}
@@ -170,7 +171,7 @@ $('#btnPrint').onclick=()=>print();
 $('#btnLogout').onclick=logout;
 $('#btnClear').onclick=async()=>{if(!confirm('Effacer définitivement tous les projets ?'))return;try{await dbDeleteAll()}catch(e){fail(e,'Suppression impossible');return}rows=[];render()};
 $('#btnExp').onclick=()=>download('projets-recherche.csv',toCSV(COLS.map(([k])=>CSVH[k]||k),rows.map(r=>COLS.map(([k])=>r[k]))));
-$('#btnTpl').onclick=()=>download('modele-projets.csv',toCSV(COLS.map(([k])=>CSVH[k]||k),[['PRJ-2026-001','ACRO','','Titre complet du projet','ANR','JCJC','AAPG 2026','Coordinateur','Mon laboratoire','Prénom Nom','prenom.nom@exemple.fr','2026-03-14','2026-03-10','Déposé','250000','Relancer le partenaire','2026-04-01','','']]));
+$('#btnTpl').onclick=()=>download('modele-projets.csv',toCSV(COLS.map(([k])=>CSVH[k]||k),[['1','ACRO','','Titre complet du projet','ANR','JCJC','AAPG 2026','Coordinateur','Mon laboratoire','Prénom Nom','prenom.nom@exemple.fr','2026-03-14','2026-03-10','Déposé','250000','Relancer le partenaire','2026-04-01','','']]));
 $('#btnRepCsv').onclick=()=>repRows.length&&download('rapport.csv',toCSV([AXES[$('#repBy').value][0],'Projets','En préparation','En évaluation','Acceptés','Refusés','Retirés/autres','Taux de succès','Budget demandé (€)','Budget obtenu (€)'],repRows.map(([k,t])=>[k,t.n,t.prep,t.depose,t.accepte,t.refuse,t.retire+t.autre,pct(t.taux),t.dem,t.obt])));
 ['dragover','dragenter'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();$('#main').classList.add('drop')}));
 ['dragleave','drop'].forEach(ev=>document.addEventListener(ev,e=>{e.preventDefault();$('#main').classList.remove('drop')}));
