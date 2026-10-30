@@ -152,3 +152,8 @@ dialog::backdrop{backdrop-filter:blur(4px)}
 #login{background-image:radial-gradient(color-mix(in srgb,var(--ink) 14%,transparent) 1px,transparent 1.5px);background-size:22px 22px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 @media print{*{animation:none!important}}
+
+/* Chiffres des cartes : jamais coupés */
+.kpi{min-width:0}
+.kpi b{white-space:nowrap}
+#ovBar{margin-bottom:18px}

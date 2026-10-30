@@ -10,12 +10,14 @@ function countUps(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)ret
   (function step(t){const p=Math.min((t-t0)/800,1);el.textContent=fmtK(Math.round(to*(1-Math.pow(1-p,3))),f);if(p<1)requestAnimationFrame(step)})(t0)})}
 function movePill(){const b=$('nav [aria-selected=true]'),p=$('nav .pill');if(!b||!p||!b.offsetWidth)return;
  p.style.width=b.offsetWidth+'px';p.style.height=b.offsetHeight+'px';p.style.transform=`translate(${b.offsetLeft}px,${b.offsetTop}px)`}
-function playFx(){const m=$('#main'),sec=$('main>section:not([hidden])');if(!sec)return;movePill();
+function fitKpis(){$$('.kpi b').forEach(b=>{b.style.fontSize='';if(!b.clientWidth)return;const cur=b.textContent;if(b.dataset.count)b.textContent=fmtK(+b.dataset.count,b.dataset.fmt);
+ let fs=parseFloat(getComputedStyle(b).fontSize);while(b.scrollWidth>b.clientWidth&&fs>14){fs-=1;b.style.fontSize=fs+'px'}b.textContent=cur})}
+function playFx(){const m=$('#main'),sec=$('main>section:not([hidden])');if(!sec)return;movePill();fitKpis();
  sec.querySelectorAll('.kpi,.panel,tbody tr').forEach((el,i)=>el.style.setProperty('--i',Math.min(i,14)));
  sec.querySelectorAll('.ybar').forEach((el,i)=>el.style.setProperty('--j',i));
  m.classList.remove('anim');void m.offsetWidth;m.classList.add('anim');
  clearTimeout(playFx.t);playFx.t=setTimeout(()=>m.classList.remove('anim'),1800);countUps()}
-addEventListener('resize',movePill);
+addEventListener('resize',()=>{movePill();fitKpis()});
 
 /* ---------- Routes : une adresse par onglet (#/overview, #/reports, #/data) ---------- */
 const ROUTES=['overview','reports','data'],NAMES={overview:'Overview',reports:'Reports',data:'Data'};
@@ -62,19 +64,23 @@ const tag=s=>{const c=cat(s);return`<span class="tag s-${c}">${esc(s||LAB[c])}</
 const empty=()=>`<div class="empty"><p><b>Aucun projet pour l’instant.</b><br>Créez un projet ou importez un fichier CSV.</p><button class="btn pri" data-act="new">Nouveau projet</button><button class="btn" data-act="import">Importer un CSV</button></div>`;
 
 /* ---------- Overview ---------- */
+const OVF=['#oYear','#oProg','#oLabo','#oRole'];
+const ovMatch=r=>(!$('#oYear').value||year(r)===$('#oYear').value)&&(!$('#oProg').value||r.programme===$('#oProg').value)&&(!$('#oLabo').value||r.labo===$('#oLabo').value)&&(!$('#oRole').value||r.role===$('#oRole').value);
 function renderOverview(){
- const s=stats(rows);$('#ovSub').textContent=rows.length?`${s.n} projet${s.n>1?'s':''} suivi${s.n>1?'s':''}, ${new Set(rows.map(r=>r.labo).filter(Boolean)).size} laboratoire(s).`:'Vue d’ensemble du portefeuille.';
+ const R=rows.filter(ovMatch),act=OVF.map(i=>$(i).value).filter(Boolean),s=stats(R);
+ $('#ovSub').textContent=!rows.length?'Vue d’ensemble du portefeuille.':`${s.n} projet${s.n>1?'s':''}`+(act.length?` sur ${rows.length} · ${act.join(' · ')}`:`, ${new Set(R.map(r=>r.labo).filter(Boolean)).size} laboratoire(s)`)+'.';
  if(!rows.length){$('#ovBody').innerHTML=`<div class="panel">${empty()}</div>`;return}
+ if(!R.length){$('#ovBody').innerHTML='<div class="panel"><div class="empty">Aucun projet pour ces filtres.</div></div>';return}
  const k=(v,l,c='',f='n',g=null)=>`<div class="kpi ${c}" ${g==null?'':go(g)}><b data-count="${v}" data-fmt="${f}">${fmtK(v,f)}</b><span>${l}</span></div>`,
   rate=s.taux==null?0:Math.round(s.taux*100),
   kRate=`<div class="kpi rate"><div><b ${s.taux==null?'':`data-count="${rate}" data-fmt="pct"`}>${s.taux==null?'—':rate+' %'}</b><span>Taux de succès</span></div><div class="ring" style="--v:${rate}"></div></div>`;
- const yrs=[...groupBy(rows,year)].sort((a,b)=>a[0].localeCompare(b[0])),mx=Math.max(...yrs.map(y=>y[1].length));
+ const yrs=[...groupBy(R,year)].sort((a,b)=>a[0].localeCompare(b[0])),mx=Math.max(...yrs.map(y=>y[1].length));
  const years=yrs.map(([y,l])=>{const t=stats(l);return`<div class="ycol" ${go('',y)}><span class="n">${l.length}</span><div class="ybar" style="height:${l.length/mx*140}px">${ORDER.map(c=>t[c]?`<i class="s-${c}" style="height:${t[c]/l.length*100}%" title="${LAB[c]} : ${t[c]}"></i>`:'').join('')}</div><small>${y}</small></div>`}).join('');
  const today=new Date().toISOString().slice(0,10),due=[];
- rows.forEach(r=>{const c=cat(r.statut);if(c==='prep'&&r.date_limite)due.push([r.date_limite,'Date limite de dépôt',r]);if(r.echeance&&!['accepte','refuse','retire'].includes(c))due.push([r.echeance,r.prochaine_action||'Échéance de suivi',r])});
+ R.forEach(r=>{const c=cat(r.statut);if(c==='prep'&&r.date_limite)due.push([r.date_limite,'Date limite de dépôt',r]);if(r.echeance&&!['accepte','refuse','retire'].includes(c))due.push([r.echeance,r.prochaine_action||'Échéance de suivi',r])});
  due.sort((a,b)=>a[0].localeCompare(b[0]));
  const upcoming=due.slice(0,6).map(([d,l,r])=>`<tr data-edit="${esc(r.id)}" tabindex="0"><td><b>${esc(r.acronyme||r.id)}</b><br><span class="sub">${esc(l)}</span></td><td class="mono${d<today?' late':''}">${fmtDate(d)}</td><td>${tag(r.statut)}</td></tr>`).join('')||'<tr><td class="sub">Aucune échéance renseignée.</td></tr>';
- const progs=[...groupBy(rows,r=>r.programme)].sort((a,b)=>b[1].length-a[1].length).slice(0,6).map(([p,l])=>{const t=stats(l);return`<tr><td>${esc(p)}</td><td class="num mono">${l.length}</td><td>${strip(t,'mini')}</td><td class="num mono">${pct(t.taux)}</td></tr>`}).join('');
+ const progs=[...groupBy(R,r=>r.programme)].sort((a,b)=>b[1].length-a[1].length).slice(0,6).map(([p,l])=>{const t=stats(l);return`<tr><td>${esc(p)}</td><td class="num mono">${l.length}</td><td>${strip(t,'mini')}</td><td class="num mono">${pct(t.taux)}</td></tr>`}).join('');
  $('#ovBody').innerHTML=`<div class="kpis">${k(s.n,'Projets','','n','')}${k(s.prep,'En préparation','s-prep','n','c:prep')}${k(s.depose,'En évaluation','s-depose','n','c:depose')}${k(s.accepte,'Acceptés','s-accepte','n','c:accepte')}${k(s.refuse,'Refusés','s-refuse','n','c:refuse')}${kRate}${k(s.obt,'Budget obtenu','','eur','c:accepte')}</div>
  <div class="panel"><h3>Répartition par statut</h3>${strip(s)}<div class="legend">${ORDER.filter(c=>s[c]).map(c=>`<em class="s-${c}" ${go('c:'+c)}>${LAB[c]} · ${s[c]} (${Math.round(s[c]/s.n*100)} %)</em>`).join('')}<em>Budget demandé : ${eur.format(s.dem)}</em></div></div>
  <div class="grid2"><div class="panel"><h3>Projets par année</h3><div class="years">${years}</div></div>
@@ -101,14 +107,16 @@ function renderReports(){
 const TCOLS=[['id','Projet'],['acronyme','Acronyme'],['titre','Titre'],['programme','Programme'],['labo','Laboratoire'],['statut','Statut'],['date_limite','Date limite'],['montant','Budget']];
 const cell=(r,k)=>k==='id'?`<td class="mono"><b>${esc(r.id)}</b></td>`:k==='titre'?`<td class="cut" title="${esc(r.titre)}">${esc(r.titre)}</td>`:k==='statut'?`<td>${tag(r.statut)}</td>`:k==='date_limite'?`<td class="mono">${fmtDate(r.date_limite)}</td>`:k==='montant'?`<td class="num mono">${r.montant?eur.format(r.montant):'—'}</td>`:`<td>${esc(r[k])}</td>`;
 function fillFilters(){
- const fs=$('#fStat'),fy=$('#fYear'),vs=fs.value,vy=fy.value;
+ const fs=$('#fStat'),vs=fs.value;
  fs.innerHTML='<option value="">Tous les statuts</option><optgroup label="Catégories">'+ORDER.map(c=>`<option value="c:${c}">${LAB[c]}</option>`).join('')+'</optgroup><optgroup label="Statuts">'+STATUTS.map(s=>`<option value="s:${s}">${s}</option>`).join('')+'</optgroup>';
  fs.value=vs;
- fy.innerHTML='<option value="">Toutes les années</option>'+[...new Set(rows.map(year))].sort().map(y=>`<option>${y}</option>`).join('');fy.value=vy}
+ const U=f=>[...new Set(rows.map(f).filter(Boolean))].sort((x,y)=>String(x).localeCompare(String(y),'fr',{numeric:true}));
+ const S=(id,vals,all)=>{const e=$(id),v=e.value;e.innerHTML=`<option value="">${all}</option>`+vals.map(x=>`<option>${esc(x)}</option>`).join('');e.value=v};
+ [['Year','Toutes les années',year],['Prog','Tous les programmes',r=>r.programme],['Labo','Tous les laboratoires',r=>r.labo],['Role','Tous les rôles',r=>r.role]].forEach(([n,all,f])=>{const v=U(f);S('#o'+n,v,all);S('#f'+n,v,all)})}
 function renderData(){
  if(!rows.length){$('#dataBody').innerHTML=empty();return}
  const q=norm($('#q').value),fv=$('#fStat').value,fy=$('#fYear').value;
- const l=rows.filter(r=>(!fv||(fv[0]==='c'?cat(r.statut)===fv.slice(2):norm(r.statut)===norm(fv.slice(2))))&&(!fy||year(r)===fy)&&(!q||norm(Object.values(r).join(' ')).includes(q)));
+ const l=rows.filter(r=>(!fv||(fv[0]==='c'?cat(r.statut)===fv.slice(2):norm(r.statut)===norm(fv.slice(2))))&&(!fy||year(r)===fy)&&(!$('#fProg').value||r.programme===$('#fProg').value)&&(!$('#fLabo').value||r.labo===$('#fLabo').value)&&(!$('#fRole').value||r.role===$('#fRole').value)&&(!q||norm(Object.values(r).join(' ')).includes(q)));
  l.sort((a,b)=>{const x=a[sort.k]??'',y=b[sort.k]??'';return(typeof x==='number'?x-y:String(x).localeCompare(String(y),'fr',{numeric:true}))*sort.d});
  const ths=TCOLS.map(([k,h])=>`<th class="s ${k==='montant'?'num':''}" data-k="${k}">${h}${sort.k===k?(sort.d>0?' ▲':' ▼'):''}</th>`).join('');
  $('#dataBody').innerHTML=l.length?`<table><thead><tr>${ths}</tr></thead><tbody>${l.map(r=>`<tr data-edit="${esc(r.id)}" tabindex="0">${TCOLS.map(([k])=>cell(r,k)).join('')}</tr>`).join('')}</tbody></table>`:'<div class="empty">Aucun projet ne correspond à ces filtres.</div>';
@@ -142,10 +150,12 @@ function render(){fillFilters();renderOverview();renderReports();renderData()}
 $$('nav button').forEach(b=>b.onclick=()=>{location.hash='#/'+b.dataset.tab});
 $('#repBy').innerHTML=Object.entries(AXES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');
 $('#repBy').onchange=$('#repYear').onchange=renderReports;
-$('#q').oninput=renderData;$('#fStat').onchange=renderData;$('#fYear').onchange=renderData;
+$('#q').oninput=renderData;['#fStat','#fYear','#fProg','#fLabo','#fRole'].forEach(i=>$(i).onchange=renderData);
+OVF.forEach(i=>$(i).onchange=()=>{renderOverview();playFx()});
+$('#oReset').onclick=()=>{OVF.forEach(i=>$(i).value='');renderOverview();playFx()};
 document.addEventListener('click',e=>{
  const g=e.target.closest('[data-go]');
- if(g){const[s,y]=g.dataset.go.split('|');$('#fStat').value=s;$('#fYear').value=y;$('#q').value='';renderData();location.hash='#/data';return}
+ if(g){const[s,y]=g.dataset.go.split('|');$('#fStat').value=s;$('#fYear').value=y||$('#oYear').value;$('#fProg').value=$('#oProg').value;$('#fLabo').value=$('#oLabo').value;$('#fRole').value=$('#oRole').value;$('#q').value='';renderData();location.hash='#/data';return}
  const ed=e.target.closest('[data-edit]');if(ed){openForm(ed.dataset.edit);return}
  const a=e.target.closest('[data-act]');if(a){a.dataset.act==='import'?$('#file').click():openForm(null);return}
  const h=e.target.closest('th.s');if(h){const k=h.dataset.k;sort={k,d:sort.k===k?-sort.d:1};renderData()}

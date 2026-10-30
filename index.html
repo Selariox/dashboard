@@ -39,6 +39,13 @@
 <main id="main">
 <section id="overview">
   <div class="top"><div><h2>Overview</h2><p class="sub" id="ovSub"></p></div></div>
+  <div class="bar" id="ovBar">
+    <select id="oYear" aria-label="Année"></select>
+    <select id="oProg" aria-label="Programme"></select>
+    <select id="oLabo" aria-label="Laboratoire"></select>
+    <select id="oRole" aria-label="Rôle"></select>
+    <button class="btn" id="oReset">Réinitialiser</button>
+  </div>
   <div id="ovBody"></div>
 </section>
 
@@ -59,6 +66,9 @@
     <input type="search" id="q" placeholder="Rechercher (projet, labo, contact, call…)" aria-label="Rechercher">
     <select id="fStat" aria-label="Filtrer par statut"></select>
     <select id="fYear" aria-label="Filtrer par année"></select>
+    <select id="fProg" aria-label="Filtrer par programme"></select>
+    <select id="fLabo" aria-label="Filtrer par laboratoire"></select>
+    <select id="fRole" aria-label="Filtrer par rôle"></select>
     <span class="sp"></span>
     <button class="btn" id="btnImport2">Importer un CSV</button>
     <button class="btn" id="btnTpl">Modèle CSV</button>
