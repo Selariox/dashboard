@@ -1,7 +1,7 @@
 /* ---------- État ---------- */
 let rows=[],sort={k:'id',d:1},editing=null;
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>t.style.display='none',5000)}
-const fail=(e,m='Opération impossible')=>toast(m+' : '+(e&&e.message?e.message:e));
+const fail=(e,m='Opération impossible')=>{const s=e&&e.message?e.message:String(e);toast(m+' : '+s+(/row-level security/i.test(s)?' — la règle de sécurité ne reconnaît pas votre compte (voir sql/fix-policy.sql).':''))};
 
 /* ---------- Effets visuels ---------- */
 const fmtK=(v,f)=>f==='eur'?eur.format(v):f==='pct'?v+' %':v;
